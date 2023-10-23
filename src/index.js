@@ -44,9 +44,6 @@ app.use(express.json())
   .use(express.static(path.join(__dirname, 'public')))
   .set('views', path.join(__dirname, 'views'))
   .set('trust proxy', 1)
-  .get('/ip', (req, res) => {
-    res.send(req.ip);
-  })
   .get('/', (req, res) => {
     res.render('index');
   })
