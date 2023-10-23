@@ -43,6 +43,10 @@ app.use(express.json())
   .set('view engine', 'ejs')
   .use(express.static(path.join(__dirname, 'public')))
   .set('views', path.join(__dirname, 'views'))
+  .set('trust proxy', 1)
+  .get('/ip', (req, res) => {
+    res.send(req.ip);
+  })
   .get('/', (req, res) => {
     res.render('index');
   })
@@ -125,7 +129,7 @@ app.use(express.json())
     }
   })
   .post('/register', createAccountLimiter, async (req, res) => {
-    const { email, password, password2, username } = req.body;
+    var { email, password, password2, username } = req.body;
     username = username.toLowerCase();
 
     var user = await User.findOne({ email });
