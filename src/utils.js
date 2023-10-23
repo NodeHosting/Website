@@ -126,7 +126,6 @@ module.exports = function hash(s) {
 
     hashed += String.fromCharCode(code+2);
   });
-
-  console.log(hashed.toString('binary'));
+  
   return Buffer.from(hashed).toString('base64');
 }
