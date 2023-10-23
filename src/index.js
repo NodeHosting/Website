@@ -8,21 +8,36 @@ const path = require('path');
 const config = require('../config.json');
 const mongoose = require('mongoose');
 const docker = require('./docker');
+const bythe = require('./utils');
 
 const User = require('./Mongoose/User');
+const { default: rateLimit } = require('express-rate-limit');
+
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: 'You\'ve created too many accounts from this ip',
+  standardHeaders: 'draft-7',
+  legacyHeaders: false
+});
 
 app.use(express.json())
   .use(express.urlencoded({ extended: true }))
   .use(fileUpload({
     useTempFiles: true,
     tempFileDir: '/tmp',
-    // safeFileNames: true,
-    limits: { files: 1 }
+    limits: { files: 1, fileSize: 1e+9 }
   }))
   .use(session({
     secret: config.session_secret,
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 12 }
+  }))
+  .use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false
   }))
   .engine('html', require('ejs').renderFile)
   .set('view engine', 'ejs')
@@ -100,7 +115,7 @@ app.use(express.json())
       return res.redirect('/login');
     }
 
-    if(password !== user.password) {
+    if(bythe(password) !== user.password) {
       console.log(`password incorrect`);
       return res.redirect('/login');
     }
@@ -109,7 +124,7 @@ app.use(express.json())
       res.redirect('/dashboard');
     }
   })
-  .post('/register', async (req, res) => {
+  .post('/register', createAccountLimiter, async (req, res) => {
     const { email, password, password2, username } = req.body;
     username = username.toLowerCase();
 
@@ -121,9 +136,11 @@ app.use(express.json())
 
     if(password !== password2) return res.redirect('/register');
 
+    const pswd = bythe(password);
+
     user = await User.create({
       email,
-      password,
+      password: pswd,
       username
     });
 
@@ -174,6 +191,10 @@ app.use(express.json())
 mongoose.connect(config.mongoose_url).then(() => console.log(`Connected to the database`));
 
 async function notify(message) {
+  const data = {
+    avatar_url: 'https://i.imgur.com/4M34hi2.png',
+    content: message,
+  }
   await fetch(config.webhook_url, {
     method: "POST",
     body: message

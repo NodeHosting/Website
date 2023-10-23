@@ -25,7 +25,7 @@ async function stats(id) {
 }
 
 async function startDocker(username) {
-  const fullId = execSync(`docker run -d ${username}/program`).toString().trim();
+  const fullId = execSync(`docker run -d --memory="500m" ${username}/program`).toString().trim();
   const id = fullId.slice(0, 11);
   const user = await User.findOne({ username });
   user.dockerid = id;
