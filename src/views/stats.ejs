@@ -28,11 +28,15 @@
       <div class="col">
         <div class="card card-outline card-blue full">
           <div class="card-header">
-            <span class="card-title">Logs</span>
+            <span class="card-title">Stats</span>
             <a href="/dashboard" class="position-absolute" style="right: 3%"><button class="btn btn-dark">back</button></a>
           </div>
           <div class="card-body">
-            <textarea cols="190" rows="35" class="logs" id="logs"><%- logs.join('\n') %></textarea>
+            <table>
+              <% stats.forEach(stat => { %>
+                <%- include('includes/stats', stat) %>
+              <% }) %>
+            </table>
           </div>
         </div>
       </div>

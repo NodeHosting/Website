@@ -1,3 +1,14 @@
+.docker-box {
+  margin-left: 10%;
+  margin-right: 10%;
+  padding-top: 5px;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+}
+
 .spin {
   animation: spin 2500ms linear infinite;
 }

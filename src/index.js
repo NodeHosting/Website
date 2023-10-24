@@ -73,7 +73,14 @@ app.use(express.json())
   .get('/logs', check, async (req, res) => {
     const user = await User.findOne({ username: req.session.user.username });
     const logs = await docker.getLogs(user.dockerid);
+    
     res.render('logs', { logs });
+  })
+  .get('/stats', check, async (req, res) => {
+    const user = await User.findOne({ username: req.session.user.username });
+    const stats = await docker.stats(user.dockerid);
+
+    res.render('stats', { stats: [ stats ]});
   })
   .get('/start', check, async (req, res) => {
     await docker.startDocker(req.session.user.username).then(async () => {
