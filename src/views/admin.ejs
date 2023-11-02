@@ -13,9 +13,19 @@
               </div>
               <div class="card-body">
                 <form method="post" action="/admin/verify" role="form">
-                  <select name="username" class="select2-dark">
+                  <select name="name" class="select2-dark">
                     <% users.forEach(user => { %>
-                      <option><%- user.username %></option>
+                      <option value="<%- user.username %>"><%- user.username %></option>
+                      <% user.codes.forEach(name => { %>
+                        
+                      <% }) %>
+                    <% }); %>
+                  </select>
+                  <select name="code" class="select2-dark">
+                    <% users.forEach(user => { %>
+                      <% user.codes.forEach(name => { %>
+                        <option value="<%- name %>"><%- name %></option>
+                      <% }) %>
                     <% }); %>
                   </select>
 

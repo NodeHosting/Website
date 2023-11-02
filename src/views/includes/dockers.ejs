@@ -1,0 +1,26 @@
+<% dockers.forEach((docker, id) => { %>
+  <div class="card card-outline card-purple docker-box">
+    <div class="card-header">
+      <h3 class="card-title"><%- id %></h3>
+      <a href="/delete/<%- id %>" class="position-absolute" style="right: 3%"><button class="btn btn-danger">Delete</button></a>
+    </div>
+    <div class="card-body container">
+      <% if(docker.verifying) { %>
+        <h2>Files are awating verification</h2>
+      <% } else { %>
+          <% if (docker.id !== "") { %> <a href="/logs/<%- id %>"><button class="btn btn-info" style="margin-right: 3px;">Logs</button></a> <% } %>
+          <% if(docker.running) { %>
+            <a href="/shutdown/<%- id %>"><button class="btn btn-danger" style="margin-right: 3px;">Stop</button></a>
+            <a href="/stats/"><button class="btn btn-info" style="margin-right: 3px;">Stats</button></a>
+            <% } else { %>
+              <a href="/start/<%- id %>"><button class="btn btn-success" style="margin-right: 3px;">Start</button></a>
+            <% } %>
+      <% } %>
+    </div>
+    <% if(docker.verifying) { %>
+      <div class="overlay dark">
+        <i class="fa-solid fa-2xl fa-rotate spin"></i>
+      </div>
+    <% } %>
+  </div>  
+<% }) %>

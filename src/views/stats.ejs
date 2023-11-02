@@ -15,10 +15,8 @@
       height: 100%;
     }
 
-    .logs {
-      background-color: transparent;
-      color: white;
-      height: 100%;
+    tr, th {
+      padding: 20px;
     }
   </style>
 </head>
@@ -33,8 +31,8 @@
           </div>
           <div class="card-body">
             <table>
-              <% stats.forEach(stat => { %>
-                <%- include('includes/stats', stat) %>
+              <% stats.forEach(obj => { %>
+                <%- include('includes/stats', {stat: obj}) %>
               <% }) %>
             </table>
           </div>
@@ -45,9 +43,6 @@
 
   <script>
     (() => {
-      var textarea = document.getElementById('logs');
-      textarea.scrollTop = textarea.scrollHeight;
-
       setTimeout(() => {
         location.reload();
       }, 30000);

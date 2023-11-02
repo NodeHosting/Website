@@ -7,7 +7,7 @@
     href="/css/dashboard.css"
   />
 </head>
-<body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
   <script>
     /** @param {string[]} messages */
     function message(messages) {
@@ -31,38 +31,17 @@
           message(data);
         </script>
       <% } %>
-      <div class="row-cols-1">
+      <div class="row">
         <div class="col">
+          <%- include('includes/dockers', user.dockers) %>
           <div class="card card-outline card-purple docker-box">
-            <div class="card-header">
-              <h3 class="card-title">Docker Controls</h3>
-            </div>
-            <div class="card-body container">
-              <% if (user.dockerid == '' && !user.verifying && !user.verified) { %>
-                <form action="/upload" method="post" enctype="multipart/form-data">
-                  <input name="zip" type="file" class="btn btn-file" />
-                  <button type="submit" class="btn btn-success" style="position: absolute; right: 3%;">
-                    Upload
-                  </button>
-                </form>
-              <% } else if(user.verifying) { %>
-                <h2>Files are awating verification</h2>
+            <div class="card-body">
+              <% if(Object.entries(user.dockers).length < user.maxContainers) { %>
+                <a href="/addDocker" style="position:relative; left: 41.5%"><button class="btn-lg btn-primary"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
               <% } else { %>
-                  <a href="/logs"><button class="btn btn-info" style="margin-right: 3px;">Logs</button></a>
-                  <% if(user.running) { %>
-                    <a href="/shutdown"><button class="btn btn-danger" style="margin-right: 3px;">Stop</button></a>
-                    <% } else { %>
-                      <a href="/start"><button class="btn btn-success" style="margin-right: 3px;">Start</button></a>
-                    <% } %>
-                  <a href="/stats"><button class="btn btn-info" style="margin-right: 3px;">Stats</button></a>
-                  <a href="/delete"><button class="btn btn-danger" style="margin-right: 3px;">Delete</button></a>
+                <button class="btn-lg btn-primary disabled" style="position:relative; left: 41.5%; cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
               <% } %>
             </div>
-            <% if(user.verifying) { %>
-              <div class="overlay dark">
-                <i class="fa-solid fa-2xl fa-rotate spin"></i>
-              </div>
-            <% } %>
           </div>
         </div>
       </div>

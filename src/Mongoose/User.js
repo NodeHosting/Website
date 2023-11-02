@@ -1,16 +1,17 @@
 const mongoose = require('mongoose');
 
-module.exports = mongoose.model('User', new mongoose.Schema({
-  email: { type: String, required: true },
-  username: { type: String },
-  password: { type: String },
-  admin: { type: Boolean, default: false },
+module.exports = mongoose.model(
+  'User', 
+  new mongoose.Schema({
+    email: { type: String, required: true },
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+    admin: { type: Boolean, default: false },
+    maxContainers: { type: mongoose.Types.Decimal128, default: 1 },
 
-  running: { type: Boolean, default: false },
-  verifying: { type: Boolean, default: false },
-  verified: { type: Boolean, default: false },
-  messages: { type: Array, default: [] },
+    messages: { type: Array, default: ['Welcome to the website, to get started you can press on the add docker container button'] },
 
-  dockerid: { type: String, default: '' },
-  fileName: { type: String }
-}));
+    dockers: { type: Object, default: {} },
+    fileName: { type: String, default: '' }
+  })
+);

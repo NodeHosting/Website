@@ -12,6 +12,7 @@ const bythe = require('./utils');
 
 const User = require('./Mongoose/User');
 const { default: rateLimit } = require('express-rate-limit');
+const fs = require('fs');
 
 const createAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -55,63 +56,133 @@ app.use(express.json())
   })
   .get('/dashboard', check, async (req, res) => {
     const user = await User.findOne({ username: req.session.user.username });
-    if(user.dockerid !== '') {
-      const stats = await docker.stats(user.dockerid);
-      if(stats.PIDs == "0") user.running = false;
+    const dockers = ObjToMap(user.dockers);
+    if(dockers.size > 0) {
+      dockers.forEach(async (data, name) => {
+        if(data.id !== "") {
+          const stats = await docker.stats(data.id);
+          if(Number(stats.PIDs) > 0) data.running = true;
+          else data.running = false;
+        }
 
+        dockers.set(name, data);
+      });
+
+      user.dockers = MapToObj(dockers);
       await user.save();
     }
     
     res.render('dashboard', {
-      user: user
+      user: user,
+      dockers
     });
 
     user.messages = [];
     await user.save();
     req.session.user = user;
   })
-  .get('/logs', check, async (req, res) => {
+  .get('/addDocker', check, async (req, res) => {
+    res.render('addDocker');
+  })
+  .get('/logs/:id', check, async (req, res) => {
+    const name = req.url.split('/')[2]
     const user = await User.findOne({ username: req.session.user.username });
-    const logs = await docker.getLogs(user.dockerid);
+    const logs = await docker.getLogs(user.dockers[name].id);
+
+    console.log({ logs });
     
     res.render('logs', { logs });
   })
-  .get('/stats', check, async (req, res) => {
+  .get('/stats/', check, async (req, res) => {
+    const name = req.url.split('/')[2]
     const user = await User.findOne({ username: req.session.user.username });
-    const stats = await docker.stats(user.dockerid);
+    const dockers = ObjToMap(user.dockers);
+    const stats = [];
+    
+    dockers.forEach(async (data, _name) => {
+      const stat = await docker.stats(data.id);
+      if(stat == null) return;
 
-    res.render('stats', { stats: [ stats ]});
-  })
-  .get('/start', check, async (req, res) => {
-    await docker.startDocker(req.session.user.username).then(async () => {
-      const user = await User.findOne({ username: req.session.user.username });
-      user.running = true;
-      await user.save();
+      if(stat.PIDs < 1) data.running = false;
+      dockers.set(_name, data);
+      
+      stats.push(stat);
     });
 
-    res.redirect('/dashboard');
+    user.dockers = MapToObj(dockers);
+    user.markModified('dockers');
+    await user.save();
+    console.log(stats);
+
+    res.render('stats', { stats });
   })
-  .get('/shutdown', check, async (req, res) => {
+  .get('/start/:id', check, async (req, res) => {
+    const name = req.url.split('/')[2]
     const user = await User.findOne({ username: req.session.user.username });
-    await docker.shutdown(user.dockerid);
+    const dockers = ObjToMap(user.dockers)
+    if(dockers.has(name)) {
+      const data = dockers.get(name);
+      if(data.id !== '') {
+        await docker.startDocker({ id: data.id}).then(async () => {
+          data.running = true;
+          dockers.set(name, data);
+          user.dockers = MapToObj(dockers);
+        });
+      } else {
+        await docker.startDocker({username: user.username, name: name}).then(async (id) => {
+          data.running = true;
+          data.id = id;
+          dockers.set(name, data);
+          user.dockers = MapToObj(dockers);
+        });
+      }
+      
+      user.markModified('dockers');
+      await user.save();
+    }
 
     res.redirect('/dashboard');
   })
-  .get('/delete', check, async (req, res) => {
+  .get('/shutdown/:id', check, async (req, res) => {
+    const name = req.url.split('/')[2]
     const user = await User.findOne({ username: req.session.user.username });
-    await docker.delete(user.dockerid, user.username);
+    await docker.shutdown(user.username, name);
 
-    user.dockerid = '';
-    user.verified = false;
+    res.redirect('/dashboard');
+  })
+  .get('/delete/:id', check, async (req, res) => {
+    const name = req.url.split('/')[2]
+    const user = await User.findOne({ username: req.session.user.username });
+    const dockers = ObjToMap(user.dockers);
+
+    docker.delete(user.username, name);
+    dockers.delete(name);
+
+    user.dockers = MapToObj(dockers);
+    user.markModified('dockers');
 
     await user.save();
 
     res.redirect('/dashboard');
   })
   .get('/admin', check, async (req, res) => {
-    const users = await User.find({ verifying: true });
+    const users = await User.find({});
+    const verification = [];
+    users.forEach(user => {
+      const data = {
+        username: user.username,
+        codes: []
+      }
+      const map = ObjToMap(user.dockers);
+      map.forEach((value, name) => {
+        if(value.verifying) data.codes.push(name);
+      })
+
+      if(data.codes.length > 0) verification.push(data);
+    })
+
     res.render('admin', {
-      users
+      users: verification
     });
   })
   .post('/login', async (req, res) => {
@@ -173,26 +244,69 @@ app.use(express.json())
     await notify(`${req.session.user.username} uploaded ${req.files.zip.name} and it needs verification`);
     
   })
+  .post('/addDocker', check, async (req, res) => {
+    const body = req.body;
+    const files = req.files;
+
+    if(!fs.existsSync(path.join(__dirname, 'verify', req.session.user.username))) await fs.mkdirSync(path.join(__dirname, 'verify', req.session.user.username), { recursive: true });
+    await files.file.mv(path.join(__dirname, 'verify', req.session.user.username, `${body.name}.zip`), async (err) => {
+      if(err) {
+        console.log(err)
+        return res.status(500).send(err);
+      }
+
+      const user = await User.findOne({ username: req.session.user.username });
+      if(Object.entries(user.dockers).length == 0) user.dockers = {};
+      var dockers;
+      if (Object.entries(user.dockers).length > 0) dockers = ObjToMap(user.dockers);
+      else dockers = new Map();
+
+      const baseContainer = {
+        running: false,
+        id: '',
+        verifying: true,
+        verified: false
+      }
+
+      dockers.set(body.name, baseContainer);
+
+      user.dockers = MapToObj(dockers);
+
+      await user.save();
+    })
+
+    res.redirect('/dashboard')
+  })
   .post('/admin/verify', check, async (req, res) => {
-    const { username } = req.body;
-    const user = await User.findOne({ username });
+    const {name, code} = req.body;
+    const user = await User.findOne({ username: name });
     if('verify' in req.body) {
-      docker.createDocker(user.fileName, username).then(async () => {
-        user.verifying = false;
-        user.verified = true;
-        user.fileName = '';
+      docker.createDocker(code, name, []).then(async () => {
+        const dockers = ObjToMap(user.dockers);
+        const data = dockers.get(code);
+        
+        data.verifying = false;
+        data.verified = true;
+
+        user.dockers[code] = data;
+        await user.markModified(`dockers`);
         user.messages.push("Your code has been verified and a docker image has been created");
+
+        await user.save();
+
+        
       });
-    }
-    else {
-      user.verifying = false;
-      user.fileName = '';
+    } else {
+      const dockers = ObjToMap(user.dockers);
+      dockers.delete(code);
+
+      user.dockers = MapToObj(dockers);
       user.messages.push("Your code has been rejected");
+
+      await user.save();
     }
 
-    await user.save();
-
-    res.redirect('/admin')
+    res.redirect('/admin');
   })
   .listen(80, () => console.log(`Website online on port 80`));
 
@@ -205,7 +319,7 @@ async function notify(message) {
   }
   await fetch(config.webhook_url, {
     method: "POST",
-    body: message
+    body: JSON.stringify(data)
   });
 }
 
@@ -215,3 +329,6 @@ function check(req, res, next) {
   
   next();
 }
+
+function ObjToMap(obj) { return new Map(Object.entries(obj)) }
+function MapToObj(map) { return Object.fromEntries(map.entries()) }
