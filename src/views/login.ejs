@@ -5,10 +5,11 @@
   <div class="login-box">
     <div class="card">
       <div class="card-body login-card-body">
-        <h6 class="login-box-msg">Login to your account</h6>
+        <h6 class="login-box-msg" style="color: red;"><%- message %></h6>
+        <h5 class="login-box-msg">Login to your account</h5>
         <form action="/login" method="post">
           <div class="input-group mb-3">
-            <input type="email" class="form-control" placeholder="email" name="email" />
+            <input type="email" class="form-control" placeholder="email" name="email" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-user"></span>
@@ -16,7 +17,7 @@
             </div>
           </div>
           <div class="input-group mb-3">
-            <input type="password" class="form-control" placeholder="password" name="password" />
+            <input type="password" class="form-control" placeholder="password" name="password" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-key"></span>

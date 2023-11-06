@@ -1,26 +1,41 @@
-<% dockers.forEach((docker, id) => { %>
-  <div class="card card-outline card-purple docker-box">
-    <div class="card-header">
-      <h3 class="card-title"><%- id %></h3>
-      <a href="/delete/<%- id %>" class="position-absolute" style="right: 3%"><button class="btn btn-danger">Delete</button></a>
-    </div>
-    <div class="card-body container">
-      <% if(docker.verifying) { %>
-        <h2>Files are awating verification</h2>
-      <% } else { %>
-          <% if (docker.id !== "") { %> <a href="/logs/<%- id %>"><button class="btn btn-info" style="margin-right: 3px;">Logs</button></a> <% } %>
-          <% if(docker.running) { %>
-            <a href="/shutdown/<%- id %>"><button class="btn btn-danger" style="margin-right: 3px;">Stop</button></a>
-            <a href="/stats/"><button class="btn btn-info" style="margin-right: 3px;">Stats</button></a>
-            <% } else { %>
-              <a href="/start/<%- id %>"><button class="btn btn-success" style="margin-right: 3px;">Start</button></a>
-            <% } %>
-      <% } %>
-    </div>
-    <% if(docker.verifying) { %>
-      <div class="overlay dark">
-        <i class="fa-solid fa-2xl fa-rotate spin"></i>
-      </div>
-    <% } %>
-  </div>  
-<% }) %>
+<tbody>
+  <% dockers.forEach((docker, name) => { %>
+    <tr id="<%- name %>">
+      <td> # </td>
+      <td>
+        <span><%- name %></span>
+      </td>
+      <td>
+        <span><%- stats[name].CPUPerc %></span>
+      </td>
+      <td>
+        <span><%- stats[name].MemUsage %></span>
+      </td>
+      <td>
+        <% if(docker.running) { %>
+          <span class="badge badge-success">Online</span>
+        <% } else if(docker.verifying) { %>
+          <span class="badge badge-warning">Verifying</span>
+        <% } else { %>
+          <span class="badge badge-danger">Offline</span>
+        <% } %>
+      </td>
+      <td class="project-actions text-right">
+        <% if (!docker.verifying) { %>
+          <% if (docker.id !== "") { %> <a class="btn btn-primary btn-sm" href="/logs/<%- name %>">Logs</a> <% } %>
+          <% if (docker.running) { %>
+            <a class="btn btn-warning btn-sm" href="/shutdown/<%- name %>">Stop</a>
+            <a class="btn btn-info btn-sm" href="/stats">Stats</a>  
+          <% } else { %>
+            <a class="btn btn-success btn-sm" href="/start/<%- name %>">Start</a>
+          <% } %>
+          <a class="btn btn-danger btn-sm" href="/delete/<%- name %>">Delete</a>
+        <% } else { %>
+          <a class="btn btn-success btn-sm" style="cursor: not-allowed;">Start</a>
+          <a class="btn btn-danger btn-sm" style="cursor: not-allowed;">Delete</a>
+        <% } %>
+        
+      </td>
+    </tr>  
+  <% }) %>
+</tbody>

@@ -1,0 +1,15 @@
+.docker-box {
+  margin-left: 10%;
+  margin-right: 10%;
+  padding-top: 5px;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.name {
+  background-color: gray;
+  border: solid black 1px;
+}

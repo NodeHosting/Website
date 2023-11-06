@@ -23,16 +23,16 @@
   </style>
 </head>
 <body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
-  <div class="content-wrapper" style="background-color: #666699;">
+  <div class="content-wrapper">
     <div class="row-cols-1" style="height: 100%;">
       <div class="col">
         <div class="card card-outline card-blue full">
           <div class="card-header">
-            <span class="card-title">Logs</span>
+            <span class="card-title">Logs (<%- logs.length %> lines)</span>
             <a href="/dashboard" class="position-absolute" style="right: 3%"><button class="btn btn-dark">back</button></a>
           </div>
           <div class="card-body">
-            <textarea cols="190" rows="35" class="logs" id="logs" readonly><%- logs.join('\n') %></textarea>
+            <textarea cols="160" rows="35" class="logs" id="logs" readonly><%- logs.join('\n') %></textarea>
           </div>
         </div>
       </div>
@@ -40,14 +40,18 @@
   </div>
 
   <script>
-    (() => {
-      var textarea = document.getElementById('logs');
-      textarea.scrollTop = textarea.scrollHeight;
+    var textarea = document.getElementById('logs');
+    textarea.scrollTop = textarea.scrollHeight;
+    
+    const eventSource = new EventSource(`${window.location.origin}/stream/logs/<%- username %>/${window.location.pathname.split('/')[2]}`);
 
-      setTimeout(() => {
-        location.reload();
-      }, 30000);
-    })();
+    eventSource.addEventListener('message', (ev) => {
+      const data = JSON.parse(ev.data);
+      document.getElementsByClassName('card-title')[0].innerHTML = `Logs (${data.length} lines)`;
+      document.getElementById('logs').innerHTML = data.join('\n');
+
+      textarea.scrollTop = textarea.scrollHeight;
+    });
   </script>
 </body>
 </html>

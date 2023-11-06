@@ -1,7 +1,14 @@
-<tr>
+<tr id="<%- stat.ID %>">
+  <th><%- i + 1 %></th>
   <th><%- stat.ID %></th>
-  <th></th>
-  <th>CPU: <%- stat.CPUPerc %></th>
-  <th>Mem Percent: <%- stat.MemPerc %></th>
-  <th>Mem Usage: <%- stat.MemUsage %></th>
+  <th><%- stat.CPUPerc %></th>
+  <th><%- stat.MemPerc %></th>
+  <th><%- stat.MemUsage %></th>
+  <% if(typeof stat.online == "string") { %>
+    <th><span class="badge badge-warning">Verifying</span></th>
+  <% } else if(stat.online) {%>
+    <th><span class="badge badge-success">Online</span></th>
+  <% } else { %>
+    <th><span class="badge badge-danger">Offline</span></th>
+  <% } %>
 </tr>

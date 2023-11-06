@@ -9,6 +9,7 @@
 </head>
 <body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
   <script>
+    var username = "<%= user.username %>";
     /** @param {string[]} messages */
     function message(messages) {
       const len = messages.length;
@@ -22,18 +23,45 @@
     }
   </script>
   <div class="wrapper">
-    <div class="content-wrapper" style="background-color: #666699;">
-      <% if(user.messages.length > 0) { %>
-        <script data-messages="<%= JSON.stringify(user.messages) %>">
-          const data = JSON.parse(document.currentScript.dataset.messages);
-          console.log({data, type: typeof data});
-          
-          message(data);
-        </script>
-      <% } %>
+    <div class="content-wrapper">
+      <section class="content-header docker-box">
+        <div class="content-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1>Docker Containers</h1>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content">
+        <% if(user.messages.length > 0) { %>
+          <script data-messages="<%= JSON.stringify(user.messages) %>">
+            const data = JSON.parse(document.currentScript.dataset.messages);
+            
+            message(data);
+          </script>
+        <% } %>
+        <div class="card docker-box">
+          <div class="card-body p-0">
+            <table class="table table-striped projects">
+              <thead>
+                <tr>
+                  <th class="text"> # </th>
+                  <th> Image Name </th>
+                  <th> CPU Usage </th>
+                  <th> RAM Usage </th>
+                  <th> Status </th>
+                  <th> </th>
+                </tr>
+              </thead>
+              <%- include('includes/dockers', user.dockers) %>
+            </table>
+          </div>
+        </div>
+      </section>
+      
       <div class="row">
         <div class="col">
-          <%- include('includes/dockers', user.dockers) %>
           <div class="card card-outline card-purple docker-box">
             <div class="card-body">
               <% if(Object.entries(user.dockers).length < user.maxContainers) { %>
@@ -48,4 +76,22 @@
     </div>
   </div>
 </body>
+<script>
+  const eventSource = new EventSource(`${window.location.origin}/stream/stats/${username}`);
+
+  eventSource.addEventListener('message', (ev) => {
+    const data = JSON.parse(ev.data);
+    Object.keys(data).forEach(key => {
+      document.getElementById(key).children[2].children[0].innerHTML = data[key].CPUPerc;
+      document.getElementById(key).children[3].children[0].innerHTML = data[key].MemUsage;
+      if(typeof data[key].online == "string") {
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-warning">Verifying</span>`
+      } else {
+        data[key].online ? 
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-success">Online</span>` :
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-danger">Offline</span>`
+      }
+    });
+  });
+</script>
 </html>

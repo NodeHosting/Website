@@ -8,7 +8,7 @@
         <h6 class="login-box-msg">Create to your account</h6>
         <form action="/register" method="post">
           <div class="input-group mb-3">
-            <input type="email" class="form-control" placeholder="email" name="email" />
+            <input type="email" class="form-control" placeholder="email" name="email" autocomplete="email" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-at"></span>
@@ -16,7 +16,7 @@
             </div>
           </div>
           <div class="input-group mb-3">
-            <input type="text" class="form-control" placeholder="username" name="username" />
+            <input type="text" class="form-control" placeholder="username" name="username" autocomplete="username" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-user"></span>
@@ -24,7 +24,7 @@
             </div>
           </div>
           <div class="input-group mb-3">
-            <input type="password" class="form-control" placeholder="password" name="password" />
+            <input type="password" class="form-control" placeholder="password" name="password" autocomplete="off" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-key"></span>
@@ -32,7 +32,7 @@
             </div>
           </div>
           <div class="input-group mb-3">
-            <input type="password" class="form-control" placeholder="retype password" name="password2" />
+            <input type="password" class="form-control" placeholder="retype password" name="password2" autocomplete="off" required/>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-key"></span>

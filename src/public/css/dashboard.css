@@ -21,3 +21,11 @@
     transform:rotate(360deg);
   }
 }
+
+.text {
+  color: white;
+}
+
+.text:hover {
+  color: red;
+}
