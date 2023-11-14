@@ -1,29 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <%- include('includes/head') %>
-<head> <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
-/></head>
+<head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+  />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      
+      color: #333;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: white;
+    }
+
+    section {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: rgb(60, 60, 60);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: gray;
+      color: white;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
 <body class="hold-transition dark-mode sidebar-collapse">
   <div class="wrapper">
-    <nav class="main-header navbar navbar-expand navbar-dark">
+    <!-- <nav class="main-header navbar navbar-expand navbar-dark">
       <ul class="navbar-nav ml-auto">
         <li class="nav-item d-none d-sm-inline-block">
           <a class="nav-link" href="/login">Log in</a>
         </li>
       </ul>
-    </nav>
+    </nav> -->
 
     <div class="content-wrapper">
       <div class="content">
-        <section>
+        <header>
           <img src="/images/nodehosting logo.png">
-          <h3 class="text-center">NodeHosting is a free and reliable hosting</h3>
-          <h3 class="text-center">platform for your nodejs applications</h3>
-          <br><br>
-          <h3 class="text-center">We are currently only allowing users to have one application at a time</h3>
-          <h3 class="text-center">but we are looking into both payment and hardware to enable more containers</h3>
+          <p>Host your Node.js Applications with ease using Docker</p>
+        </header>
+
+        <section>
+          <h2>Why Choose Node Hosting?</h2>
+          <p>Node Hosting provides a reliable platform for hosting your Node.js applications. We give you the same amount of system resources as Replit.</p>
+
+          <h2>Key Features</h2>
+          <ul>
+              <li>Easy Deployment: Deploy your Node.js applications with just a few clicks.</li>
+              <li>Docker Integration: Benefit from the flexibility and isolation that Docker provides for your application environments.</li>
+              <li>24/7 Support: Our dedicated support team is available around the clock to assist you.</li>
+          </ul>
+
+          <h2>Get Started Today!</h2>
+          <p>Ready to host your Node.js applications with Node Hosting and Docker? Sign up now and experience seamless deployment and hosting.</p>
+
+          <a href="/register"><button class="btn btn-default">Sign Up</button></a>
+          <a href="/login"><button class="btn btn-default">Log In</button></a>
+        </section>
+
+        <section>
+          <h2>Why Docker?</h2>
+          <p>Docker allows you to package your application and its dependencies into a container, ensuring consistency across development, testing, and production environments. With Node Hosting, you can harness the power of Docker to streamline your deployment process and enhance the scalability and reliability of your applications.</p>
+        </section>
+
+        <section>
+          <h2>Pricing</h2>
+          <p>1 docker container will always be free with no option to buy more at this moment. There are ads to help with the cost of everything, I wont have a popup to remind you to disable it ever but I will ask you here to please help me and disable your adblock on this website</p>
         </section>
       </div>
     </div>
