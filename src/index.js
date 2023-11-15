@@ -52,6 +52,9 @@ app.use(express.json())
   .use(express.static(path.join(__dirname, 'public')))
   .set('views', path.join(__dirname, 'views'))
   .set('trust proxy', 1)
+  .get('/legal/:page', (req, res) => {
+    res.render(`legal/${req.params.page}`);
+  })
   .get('/', (req, res) => {
     res.render('index');
   })
