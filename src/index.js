@@ -1,6 +1,8 @@
 const express = require('express');
 const session = require('express-session');
 const fileUpload = require('express-fileupload');
+const { JSDOM } = require('jsdom');
+const createPurify = require('dompurify');
 const app = express();
 
 const path = require('path');
@@ -13,6 +15,9 @@ const User = require('./Mongoose/User');
 const { default: rateLimit } = require('express-rate-limit');
 const fs = require('fs');
 
+if(process.env['NODE_ENV'] == 'production') var production = true;
+else var production = false;
+
 const createAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
@@ -20,6 +25,7 @@ const createAccountLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false
 });
+const purifier = createPurify(new JSDOM('').window);
 
 app.use(express.json())
   .use(express.urlencoded({ extended: true }))
@@ -31,7 +37,7 @@ app.use(express.json())
   .use(session({
     secret: config.session_secret,
     resave: false, saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 12 }
+    cookie: { maxAge: 1000 * 60 * 60 * 12, secure: production }
   }))
   .use(rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -97,7 +103,8 @@ app.use(express.json())
   .get('/logs/:id', check, async (req, res) => {
     const name = req.url.split('/')[2]
     const user = await User.findOne({ username: req.session.user.username });
-    const logs = await docker.getLogs(user.dockers[name].id);
+    let logs = await docker.getLogs(user.dockers[name].id);
+    logs = purifier.sanitize(logs.join('\n'));
     
     res.render('logs', { logs, username: user.username });
   })
@@ -145,7 +152,7 @@ app.use(express.json())
         interval = setInterval(async () => {
           const logs = await docker.getLogs(user.dockers[id].id);
 
-          res.write(`data: ${JSON.stringify(logs)}\n\n`);
+          res.write(`data: ${JSON.stringify(purifier.sanitize(logs.join('\n')))}\n\n`);
         }, 2000);
 
         break;
@@ -263,6 +270,7 @@ app.use(express.json())
     });
   })
   .post('/login', async (req, res) => {
+    console.log(req.get('host'));
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
@@ -328,7 +336,7 @@ app.use(express.json())
     await files.code.mv(path.join(__dirname, 'verify', req.session.user.username, `${body.name}.zip`), async (err) => {
       if(err) {
         console.log(err)
-        return res.status(500).send(err);
+        return res.status(500);
       }
 
       const user = await User.findOne({ username: req.session.user.username });

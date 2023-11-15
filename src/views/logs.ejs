@@ -48,7 +48,8 @@
     eventSource.addEventListener('message', (ev) => {
       const data = JSON.parse(ev.data);
       document.getElementsByClassName('card-title')[0].innerHTML = `Logs (${data.length} lines)`;
-      document.getElementById('logs').innerHTML = data.join('\n');
+      if(typeof data == "string") document.getElementById('logs').innerHTML = data;
+      else document.getElementById('logs').innerHTML = data.join('\n');
 
       textarea.scrollTop = textarea.scrollHeight;
     });
