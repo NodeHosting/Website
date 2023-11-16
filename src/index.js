@@ -39,12 +39,6 @@ app.use(express.json())
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 1000 * 60 * 60 * 12, secure: production }
   }))
-  .use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 100,
-    standardHeaders: 'draft-7',
-    legacyHeaders: false
-  }))
   .use(require('cookie-parser')())
   .use(require('connect-flash')())
   .engine('html', require('ejs').renderFile)
@@ -96,12 +90,21 @@ app.use(express.json())
       stats: statObj
     });
 
-    user.messages = [];
-    await user.save();
     req.session.user = user;
   })
+  .get('/read/:id', check, async (req, res) => {
+    const user = await User.findOne({ username: req.session.user.username });
+    user.messages = user.messages.filter(msg => {
+      return msg.id !== req.params.id;
+    });
+
+    user.markModified('messages');
+    await user.save();
+
+    res.redirect('/dashboard');
+  })
   .get('/addDocker', check, async (req, res) => {
-    res.render('addDocker');
+    res.render('addDocker', { message: req.flash('add-docker'), user: req.session.user });
   })
   .get('/logs/:id', check, async (req, res) => {
     const name = req.url.split('/')[2]
@@ -109,7 +112,7 @@ app.use(express.json())
     let logs = await docker.getLogs(user.dockers[name].id);
     logs = purifier.sanitize(logs.join('\n'));
     
-    res.render('logs', { logs, username: user.username });
+    res.render('logs', { logs, username: user.username, user: req.session.user });
   })
   .get('/stats/', check, async (req, res) => {
     const user = await User.findOne({ username: req.session.user.username });
@@ -135,7 +138,7 @@ app.use(express.json())
     user.markModified('dockers');
     await user.save();
 
-    res.render('stats', { stats, username: user.username });
+    res.render('stats', { stats, username: user.username, user: req.session.user });
   })
   .get('/stream/:name/:username/:id?', async (req, res) => {
     const { name, username, id } = req.params;
@@ -252,6 +255,22 @@ app.use(express.json())
 
     res.redirect('/dashboard');
   })
+  .get('/remove/:name', check, async(req, res) => {
+    const name = req.params.name;
+    const user = await User.findOne({ username: req.session.user.username });
+    const dockers = ObjToMap(user.dockers);
+
+    docker.remove(name, user.username);
+
+    dockers.delete(name);
+
+    user.dockers = MapToObj(dockers);
+    user.markModified('dockers');
+
+    await user.save();
+
+    res.redirect('/dashboard');
+  })
   .get('/admin', check, async (req, res) => {
     const users = await User.find({});
     const verification = [];
@@ -269,7 +288,8 @@ app.use(express.json())
     })
 
     res.render('admin', {
-      users: verification
+      users: verification,
+      user: req.session.user
     });
   })
   .post('/login', async (req, res) => {
@@ -333,7 +353,12 @@ app.use(express.json())
     const body = req.body;
     const files = req.files;
 
-    console.log({ body, files });
+    for(const illegal in ['\\', '/']) {
+      if(body.name.includes(illegal)) {
+        req.flash('add-docker', `The filename contains illigal characters`);
+        return res.redirect('/addDocker');
+      }
+    }
 
     if(!fs.existsSync(path.join(__dirname, 'verify', req.session.user.username))) await fs.mkdirSync(path.join(__dirname, 'verify', req.session.user.username), { recursive: true });
     await files.code.mv(path.join(__dirname, 'verify', req.session.user.username, `${body.name}.zip`), async (err) => {
@@ -351,6 +376,7 @@ app.use(express.json())
       const baseContainer = {
         running: false,
         id: '',
+        version: body.version,
         verifying: true,
         verified: false,
         temp: []
@@ -370,7 +396,7 @@ app.use(express.json())
       user.dockers = MapToObj(dockers);
 
       user.markModified('dockers');
-      notify(`${user.username} is awaiting verification for ${body.name}`);
+      notify(user.username, body.name);
       await user.save();
     })
 
@@ -378,9 +404,12 @@ app.use(express.json())
   })
   .post('/admin/verify', check, async (req, res) => {
     const {name, code} = req.body;
+
+    if(name == 'none' || code == 'none') return res.redirect('/admin');
+
     const user = await User.findOne({ username: name });
     if('verify' in req.body) {
-      docker.createDocker(code, name, user.dockers[code].temp).then(async () => {
+      docker.createDocker(code, name, user.dockers[code].version, user.dockers[code].temp).then(async () => {
         const dockers = ObjToMap(user.dockers);
         const data = dockers.get(code);
         
@@ -390,7 +419,11 @@ app.use(express.json())
 
         user.dockers[code] = data;
         await user.markModified(`dockers`);
-        user.messages.push("Your code has been verified and a docker image has been created");
+        user.messages.push({
+          id: genMessageId(),
+          author: "Server",
+          message: "Your code has been verified and a docker image has been created"
+        })
 
         await user.save();
       });
@@ -399,24 +432,53 @@ app.use(express.json())
       dockers.delete(code);
 
       user.dockers = MapToObj(dockers);
-      user.messages.push("Your code has been rejected");
+      user.messages.push({
+        id: genMessageId(),
+        author: "Server",
+        message: "Your code has been rejected"
+      })
 
       await user.save();
     }
 
+    return res.redirect('/admin');
+  })
+  .post('/admin/announce', check, async (req, res) => {
+    const { announcement } = req.body;
+    
+    const users = await User.find({});
+
+    users.forEach(async user => {
+      user.messages.push({
+        id: genMessageId(),
+        author: req.session.user.username,
+        message: announcement
+      });
+
+      await user.save();
+    });
+
     res.redirect('/admin');
+  })
+  .post('/admin/download', check, async (req, res) => {
+    const { code, name } = req.body;
+
+    res.download(path.join(__dirname, 'verify', name, `${code}.zip`));
   })
   .listen(80, () => console.log(`Website online on port 80`));
 
 mongoose.connect(config.mongoose_url).then(() => console.log(`Connected to the database`));
 
-async function notify(message) {
+async function notify(username, code) {
   const data = {
     avatar_url: 'https://i.imgur.com/4M34hi2.png',
-    content: message,
+    content: `A user is awating verification\n\n**User**  | ${username}\n**Code** | ${code}`,
   }
   await fetch(config.webhook_url, {
     method: "POST",
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(data)
   });
 }
@@ -428,12 +490,26 @@ function check(req, res, next) {
   next();
 }
 
+function genMessageId() {
+  let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123465789';
+
+  var id = '';
+
+  for(let i = 0; i < 25; i++) {
+    let index = Math.floor(Math.random() * chars.length);
+    id += chars[index];
+  }
+
+  return id;
+}
+
 function ObjToMap(obj) { return new Map(Object.entries(obj)) }
 function MapToObj(map) { return Object.fromEntries(map.entries()) }
 
 /**
  * @typedef body
  * @property {string} name
+ * @property {string} version
  * @property {string[] | string} key
  * @property {string[] | string} value
  */

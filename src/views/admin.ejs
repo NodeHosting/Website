@@ -1,8 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<%- include('includes/head') %> 
-<body class="dark-mode" style="overflow-y: hidden;">
+<%- include('includes/head') %>
+<head>
+  <style>
+    .row {
+      margin-top: 15px;
+    }
+
+    .announcement {
+      background-color: transparent;
+      color: white;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="dark-mode sidebar-collapse" style="overflow-y: hidden;">
   <div class="wrapper">
+    <%- include('includes/headder') %>
     <div class="content-wrapper">
       <div class="content">
         <div class="row">
@@ -14,28 +28,80 @@
               <div class="card-body">
                 <form method="post" action="/admin/verify" role="form">
                   <select name="name" class="select2-dark">
-                    <% users.forEach(user => { %>
-                      <option value="<%- user.username %>"><%- user.username %></option>
-                      <% user.codes.forEach(name => { %>
-                        
-                      <% }) %>
-                    <% }); %>
+                    <% if(users.length < 1) { %>
+                      <option value="none">none</option>
+                    <% } else { %>
+                      <% users.forEach(user => { %>
+                        <option value="<%- user.username %>"><%- user.username %></option>
+                      <% }); %>
+                    <% } %>
                   </select>
                   <select name="code" class="select2-dark">
-                    <% users.forEach(user => { %>
-                      <% user.codes.forEach(name => { %>
-                        <option value="<%- name %>"><%- name %></option>
-                      <% }) %>
-                    <% }); %>
+                    <% if(users.length < 1) { %>
+                      <option value="none">none</option>
+                    <% } else { %>
+                      <% users.forEach(user => { %>
+                        <% user.codes.forEach(name => { %>
+                          <option value="<%- name %>"><%- name %></option>
+                        <% }) %>
+                      <% }); %>
+                    <% } %>
                   </select>
 
-                  <button name="verify" class="btn btn-success">Verify</button>
+                  <button style="margin-left: 20px;" name="verify" class="btn btn-success">Verify</button>
                   <button name="reject" class="btn btn-danger">Reject</button>
                 </form>
               </div>
             </div>
-            <div class="card card-outline card-red"></div>
-            <div class="card card-outline card-red"></div>
+            
+          </div>
+          <div class="col-md-3">
+            <div class="card card-outline card-red">
+              <div class="card-header">
+                <h3 class="card-title">Send Announcement</h3>
+              </div>
+              <form method="post" action="/admin/announce" role="form">
+                <div class="card-body">
+                  <textarea cols="35" rows="10" name="announcement" placeholder="Announcement" autocomplete="off" class="announcement"></textarea>
+                </div>
+                <div class="card-footer">
+                  <button type="submit" class="btn btn-success">Submit</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card card-outline card-red">
+              <div class="card-header">
+                <h3 class="card-title">Download Code</h2>
+              </div>
+              <div class="card-body">
+                <form method="post" action="/admin/download" role="form">
+                  <select name="name" class="select2-dark">
+                    <% if(users.length < 1) { %>
+                      <option value="none">none</option>
+                    <% } else { %>
+                      <% users.forEach(user => { %>
+                        <option value="<%- user.username %>"><%- user.username %></option>
+                      <% }); %>
+                    <% } %>
+                  </select>
+                  <select name="code" class="select2-dark">
+                    <% if(users.length < 1) { %>
+                      <option value="none">none</option>
+                    <% } else { %>
+                      <% users.forEach(user => { %>
+                        <% user.codes.forEach(name => { %>
+                          <option value="<%- name %>"><%- name %></option>
+                        <% }) %>
+                      <% }); %>
+                    <% } %>
+                  </select>
+  
+                  <button style="margin-left: 25%;" class="btn btn-success">Download</button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>

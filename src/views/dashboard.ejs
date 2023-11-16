@@ -8,21 +8,8 @@
   />
 </head>
 <body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
-  <script>
-    var username = "<%= user.username %>";
-    /** @param {string[]} messages */
-    function message(messages) {
-      const len = messages.length;
-      messages = messages.join('\n');
-      swal({
-        title: `You have ${len > 1 ? `${len} messages` : `a message`}`,
-        text: messages,
-        icon: 'info',
-        button: "I've read them all"
-      });
-    }
-  </script>
   <div class="wrapper">
+    <%- include('includes/headder') %>
     <div class="content-wrapper">
       <section class="content-header docker-box">
         <div class="content-fluid">
@@ -34,13 +21,6 @@
         </div>
       </section>
       <section class="content">
-        <% if(user.messages.length > 0) { %>
-          <script data-messages="<%= JSON.stringify(user.messages) %>">
-            const data = JSON.parse(document.currentScript.dataset.messages);
-            
-            message(data);
-          </script>
-        <% } %>
         <div class="card docker-box">
           <div class="card-body p-0">
             <table class="table table-striped projects">

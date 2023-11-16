@@ -2,8 +2,9 @@ const User = require('./Mongoose/User');
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const basedir = '/home/yellowy';
 
-const Dockerfile = `FROM node:20.5.1-bookworm-slim
+const Dockerfile = `FROM node:{version}-bookworm-slim
 RUN groupadd --gid 420 {username} && useradd --uid 10420 --gid {username} --shell /bin/bash --create-home {username}
 RUN apt-get update && apt-get install -y --no-install-recommends dumb-init
 WORKDIR /home/{username}/{name}
@@ -19,13 +20,14 @@ async function getLogs(id) {
   return logs;
 }
 
-async function createDocker(file, username, envArr = []) {
+async function createDocker(file, username, version, envArr = []) {
   if(file.includes('.')) file = file.split('.')[0];
   const cmd = [];
   /** @type {string} */
   var docker = Dockerfile
     .replaceAll(/{username}/g, username)
     .replace('{name}', file)
+    .replace('{version}', version);
 
   if(envArr.length > 0) envArr.forEach(env => {
     cmd.push(`${env.name}=${env.value}`);
@@ -47,10 +49,16 @@ async function createDocker(file, username, envArr = []) {
     await execSync(`cp .dockerignore ${pth}`, { cwd: dckr });
     await execSync(`docker build . -t ${username}/${file}`, { cwd: pth });
     await execSync(`rm -rf ${pth}`, { cwd: dckr });
-    await execSync(`rm -rf ./src/verify/${username}/${file}.zip`, { cwd: dckr });
+    await execSync(`rm -f ${path.join(__dirname, 'verify', username, file)}.zip`);
 
     resolve();
   })
+}
+
+async function remove(name, username) {
+  execSync(`rm -f ${path.join(__dirname, 'verify', username, name)}.zip`);
+
+  return;
 }
 
 /** @returns {statsData} */
@@ -100,6 +108,7 @@ module.exports = {
   createDocker,
   startDocker,
   getLogs,
+  remove,
   stats,
   close,
 }
