@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../includes/head') %> 
+<head>
+  <style>
+    html,body{
+      height: 100%;
+      margin: 0;
+    }
+
+    .full {
+      margin-left: 10%;
+      margin-right: 10%;
+      margin-top: 5px;
+      height: 100%;
+    }
+
+    tr, th {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
+  <%- include('../includes/headder') %>
+  <div class="content-wrapper">
+    <div class="row-cols-1" style="height: 100%;">
+      <div class="col">
+        <div class="card card-outline card-blue full">
+          <div class="card-header">
+            <span class="card-title">Stats</span>
+            <a href="/dashboard" class="position-absolute" style="right: 3%"><button class="btn btn-dark">back</button></a>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-striped projects">
+              <thead>
+                <tr>
+                  <th> # </th>
+                  <th> Container ID </th>
+                  <th> CPU Usage </th>
+                  <th> RAM Percent </th>
+                  <th> Ram Usage </th>
+                  <th> Status </th>
+                </tr>
+              </thead>
+              <tbody>
+                <% stats.forEach((obj, i) => { %>
+                  <%- include('../includes/stats', {stat: obj, i }) %>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const eventSource = new EventSource(`${window.location.origin}/stream/stats/<%- username %>`);
+
+    eventSource.addEventListener('message', (ev) => {
+    const data = JSON.parse(ev.data);
+    Object.keys(data).forEach(key => {
+      document.getElementById(data[key].ID).children[2].innerHTML = data[key].CPUPerc;
+      document.getElementById(data[key].ID).children[3].innerHTML = data[key].MemPerc;
+      document.getElementById(data[key].ID).children[4].innerHTML = data[key].MemUsage;
+
+      if(typeof data[key].online == "string") {
+        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-warning">Verifying</span>`
+      } else {
+        data[key].online ? 
+        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-success">Online</span>` :
+        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-danger">Offline</span>`
+      }
+    });
+  });
+  </script>
+</body>
+</html>

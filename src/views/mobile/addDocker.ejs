@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../includes/head') %>
+<head>
+  <link
+    rel="stylesheet"
+    href="/css/addDocker.css"
+  />
+</head>
+<body class="hold-transition dark-mode sidebar-collapse" style="overflow-x: hidden;">
+  <div class="wrapper">
+    <%- include('../includes/headder') %>
+    <div class="content-wrapper">
+      <div class="row">
+        <div class="col">
+          <div class="card card-outline card-purple docker-box">
+            <% if(message.length !== 0) { %>
+              <div class="card-header">
+                <h2 style="color: red;"><%- message[0] %></h2>
+              </div>
+            <% } %>
+            <form action="/addDocker" method="post" enctype="multipart/form-data">
+              <div class="card-body">
+                  <div class="form-group">
+                    <label for="dockerName">Docker Image Name</label>
+                    <input name="name" type="text" class="form-control" id="dockerName" autocomplete="off" placeholder="Enter Image Name">
+                  </div>
+                  <div class="form-group">
+                    <label for="node">Node Version</label>
+                    <select class="form-control" name="node_version" id="node">
+                      <option value="latest" selected>latest</option>
+                      <option value="20.9.0">20.9.0</option>
+                      <option value="18.18.2">18.18.2</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="fileInput">Code File</label>
+                    <div class="input-group">
+                      <div class="custom-file">
+                        <input type="file" class="custom-file-input" accept=".zip,.rar,.7zip" id="fileInput" name="code">
+                        <label class="custom-file-label" for="fileInput">Choose File</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group" id="variables">
+                    <div id="origin">
+                      <div class="row">
+                        <div class="col-5">
+                          <label for="key">Env Key</label>
+                          <input class="form-control" id="key" name="key" placeholder="Key">
+                        </div>
+                        <div class="col-5">
+                          <label for="value">Env Value</label>
+                          <input class="form-control" id="value" name="value" placeholder="Value">
+                        </div>
+                        <button class="btn btn-danger" type="button" style="height: 75%; margin-top: 4.5%; margin-left: 2%;" id="remove"><i class="fa-regular fa-trash-can"></i></button>
+                        <button class="btn btn-success" type="button" style="height: 75%; margin-top: 4.5%; margin-left: 1%;" id="add"><i class="fa-regular fa-plus"></i></button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    $('#fileInput').change((e) => {
+      const fileName = e.target.files[0].name;
+
+      $('.custom-file-label')[0].innerText = fileName;
+    });
+
+    $(document).on('click', ":button", (ev) => {
+      const target = ev.currentTarget;
+      if(target.id == 'add') {
+        const fuck = $('#origin').html();
+        $('#variables').append(fuck);
+      } else if(target.id == 'remove') {
+        if($('#variables').children().length < 2) return;
+        target.parentElement.remove();
+      }
+    });
+  </script>
+</body>
+
+</html>

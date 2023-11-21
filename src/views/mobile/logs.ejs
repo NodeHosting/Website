@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../includes/head') %> 
+<head>
+  <style>
+    html,body{
+      height: 100%;
+      margin: 0;
+    }
+
+    .full {
+      margin-left: 10%;
+      margin-right: 10%;
+      margin-top: 5px;
+      height: 100%;
+    }
+
+    .logs {
+      background-color: transparent;
+      color: white;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
+  <%- include('../includes/headder') %>
+  <div class="content-wrapper">
+    <div class="row-cols-1" style="height: 100%;">
+      <div class="col">
+        <div class="card card-outline card-blue full">
+          <div class="card-header">
+            <span class="card-title">Logs (<%- logs.length %> lines)</span>
+            <a href="/dashboard" class="position-absolute" style="right: 3%"><button class="btn btn-dark">back</button></a>
+          </div>
+          <div class="card-body">
+            <textarea cols="30" rows="20" class="logs" id="logs" readonly><%- logs.join('\n') %></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var textarea = document.getElementById('logs');
+    textarea.scrollTop = textarea.scrollHeight;
+    
+    const eventSource = new EventSource(`${window.location.origin}/stream/logs/<%- username %>/${window.location.pathname.split('/')[2]}`);
+
+    eventSource.addEventListener('message', (ev) => {
+      const data = JSON.parse(ev.data);
+      document.getElementsByClassName('card-title')[0].innerHTML = `Logs (${data.length} lines)`;
+      if(typeof data == "string") document.getElementById('logs').innerHTML = data;
+      else document.getElementById('logs').innerHTML = data.join('\n');
+
+      textarea.scrollTop = textarea.scrollHeight;
+    });
+  </script>
+</body>
+</html>

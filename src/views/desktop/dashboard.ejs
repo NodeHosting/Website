@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<%- include('includes/head') %>
+<%- include('../includes/head') %>
 <head>
   <link
     rel="stylesheet"
@@ -9,7 +9,7 @@
 </head>
 <body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
   <div class="wrapper">
-    <%- include('includes/headder') %>
+    <%- include('../includes/headder') %>
     <div class="content-wrapper">
       <section class="content-header docker-box">
         <div class="content-fluid">
@@ -34,7 +34,7 @@
                   <th> </th>
                 </tr>
               </thead>
-              <%- include('includes/dockers', user.dockers) %>
+              <%- include('../includes/dockers', user.dockers) %>
             </table>
           </div>
         </div>
@@ -43,11 +43,11 @@
       <div class="row">
         <div class="col">
           <div class="card card-outline card-purple docker-box">
-            <div class="card-body">
+            <div class="card-body" style="display: flex; justify-content: center;">
               <% if(Object.entries(user.dockers).length < user.maxContainers) { %>
-                <a href="/addDocker" style="position:relative; left: 41.5%"><button class="btn-lg btn-primary"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
+                <a href="/addDocker"><button class="btn-lg btn-primary"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
               <% } else { %>
-                <button class="btn-lg btn-primary disabled" style="position:relative; left: 41.5%; cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
+                <button class="btn-lg btn-primary disabled" style="cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
               <% } %>
             </div>
           </div>

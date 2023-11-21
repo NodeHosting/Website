@@ -6,6 +6,7 @@ const createPurify = require('dompurify');
 const app = express();
 
 const path = require('path');
+const mobile = require('./middleware/browser');
 const config = require('../config.json');
 const mongoose = require('mongoose');
 const docker = require('./docker');
@@ -41,6 +42,7 @@ app.use(express.json())
   }))
   .use(require('cookie-parser')())
   .use(require('connect-flash')())
+  .use(mobile)
   .engine('html', require('ejs').renderFile)
   .set('view engine', 'ejs')
   .use(express.static(path.join(__dirname, 'public')))
@@ -84,7 +86,7 @@ app.use(express.json())
       await user.save();
     }
     
-    res.render('dashboard', {
+    res.render(res.locals.mobile ? 'mobile/dashboard' : 'desktop/dashboard', {
       user: user,
       dockers,
       stats: statObj
@@ -104,15 +106,15 @@ app.use(express.json())
     res.redirect('/dashboard');
   })
   .get('/addDocker', check, async (req, res) => {
-    res.render('addDocker', { message: req.flash('add-docker'), user: req.session.user });
+    res.render(res.locals.mobile ? 'mobile/addDocker' : 'desktop/addDocker', { message: req.flash('add-docker'), user: req.session.user });
   })
   .get('/logs/:id', check, async (req, res) => {
-    const name = req.url.split('/')[2]
+    const name = req.params.id;
     const user = await User.findOne({ username: req.session.user.username });
-    let logs = await docker.getLogs(user.dockers[name].id);
-    logs = purifier.sanitize(logs.join('\n'));
+    const unsanitized = await docker.getLogs(user.dockers[name].id);
+    const logs = purifier.sanitize(unsanitized.join('\n')).split('\n');
     
-    res.render('logs', { logs, username: user.username, user: req.session.user });
+    res.render(res.locals.mobile ? 'mobile/logs' : 'desktop/logs', { logs, username: user.username, user: req.session.user });
   })
   .get('/stats/', check, async (req, res) => {
     const user = await User.findOne({ username: req.session.user.username });
@@ -138,7 +140,7 @@ app.use(express.json())
     user.markModified('dockers');
     await user.save();
 
-    res.render('stats', { stats, username: user.username, user: req.session.user });
+    res.render(res.locals.mobile ? 'mobile/stats' : 'desktop/stats', { stats, username: user.username, user });
   })
   .get('/stream/:name/:username/:id?', async (req, res) => {
     const { name, username, id } = req.params;
@@ -156,7 +158,8 @@ app.use(express.json())
     switch (name) {
       case 'logs': {
         interval = setInterval(async () => {
-          const logs = await docker.getLogs(user.dockers[id].id);
+          const unsanitized = await docker.getLogs(user.dockers[id].id);
+          const logs = purifier.sanitize(unsanitized.join('\n')).split('\n');
 
           res.write(`data: ${JSON.stringify(purifier.sanitize(logs.join('\n')))}\n\n`);
         }, 2000);
@@ -293,7 +296,6 @@ app.use(express.json())
     });
   })
   .post('/login', async (req, res) => {
-    console.log(req.get('host'));
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
@@ -373,25 +375,25 @@ app.use(express.json())
       if (Object.entries(user.dockers).length > 0) dockers = ObjToMap(user.dockers);
       else dockers = new Map();
 
-      const baseContainer = {
-        running: false,
-        id: '',
-        version: body.version,
-        verifying: true,
-        verified: false,
-        temp: []
-      }
+      const temp = [];
 
       if(Array.isArray(body.key) && Array.isArray(body.value)) {
         body.key.forEach((key, i) => {
-          baseContainer.temp.push({
+          temp.push({
             key,
             value: body.value[i]
           });
         });
       }
 
-      dockers.set(body.name, baseContainer);
+      dockers.set(body.name, {
+        running: false,
+        id: "",
+        version: body.version,
+        verifying: true,
+        verified: false,
+        temp
+      });
 
       user.dockers = MapToObj(dockers);
 

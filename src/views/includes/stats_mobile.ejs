@@ -1,0 +1,12 @@
+<tr id="<%- stat.ID %>">
+  <th><%- i + 1 %></th>
+  <th><%- stat.CPUPerc %></th>
+  <th><%- stat.MemUsage %></th>
+  <% if(typeof stat.online == "string") { %>
+    <th><span class="badge badge-warning">Verifying</span></th>
+  <% } else if(stat.online) {%>
+    <th><span class="badge badge-success">Online</span></th>
+  <% } else { %>
+    <th><span class="badge badge-danger">Offline</span></th>
+  <% } %>
+</tr>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('../includes/head') %>
+<head>
+  <link
+    rel="stylesheet"
+    href="/css/mobile/dashboard.css"
+  />
+</head>
+<body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
+  <div class="wrapper">
+    <%- include('../includes/headder') %>
+    <div class="content-wrapper">
+      <section class="content-header docker-box">
+        <div class="content-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1>Docker Containers</h1>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="content">
+        <div class="card docker-box">
+          <div class="card-body p-0">
+            <table class="table table-striped projects">
+              <thead>
+                <tr>
+                  <th class="text"> # </th>
+                  <th> Image Name </th>
+                  <th> Status </th>
+                  <th> </th>
+                </tr>
+              </thead>
+              <%- include('../includes/dockers_mobile.ejs', user.dockers) %>
+            </table>
+          </div>
+        </div>
+      </section>
+      
+      <div class="row">
+        <div class="col">
+          <div class="card card-outline card-purple docker-box">
+            <div class="card-body" style="display: flex; justify-content: center;">
+              <% if(Object.entries(user.dockers).length < user.maxContainers) { %>
+                <a href="/addDocker"><button class="btn-lg btn-primary"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
+              <% } else { %>
+                <button class="btn-lg btn-primary disabled" style="cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  const eventSource = new EventSource(`${window.location.origin}/stream/stats/${username}`);
+
+  eventSource.addEventListener('message', (ev) => {
+    const data = JSON.parse(ev.data);
+    Object.keys(data).forEach(key => {
+      document.getElementById(key).children[2].children[0].innerHTML = data[key].CPUPerc;
+      document.getElementById(key).children[3].children[0].innerHTML = data[key].MemUsage;
+      if(typeof data[key].online == "string") {
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-warning">Verifying</span>`
+      } else {
+        data[key].online ? 
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-success">Online</span>` :
+        document.getElementById(key).children[4].innerHTML = `<span class="badge badge-danger">Offline</span>`
+      }
+    });
+  });
+</script>
+</html>

@@ -2,7 +2,6 @@ const User = require('./Mongoose/User');
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const basedir = '/home/yellowy';
 
 const Dockerfile = `FROM node:{version}-bookworm-slim
 RUN groupadd --gid 420 {username} && useradd --uid 10420 --gid {username} --shell /bin/bash --create-home {username}
@@ -16,12 +15,13 @@ CMD {cmd}`
 
 /** @returns {Promise<string[]>} */
 async function getLogs(id) {
-  const logs = await execSync(`docker logs ${id}`).toString().trim().split('\n');
+  const logs = (await runCommand(`docker logs ${id}`)).trim().split('\n');
   return logs;
 }
 
 async function createDocker(file, username, version, envArr = []) {
   if(file.includes('.')) file = file.split('.')[0];
+  if(version == undefined) version = 'current';
   const cmd = [];
   /** @type {string} */
   var docker = Dockerfile
@@ -42,21 +42,26 @@ async function createDocker(file, username, version, envArr = []) {
   if(!fs.existsSync(path.join(__dirname, 'temp', username))) await fs.mkdirSync(path.join(__dirname, 'temp', username), { recursive: true });
 
   return new Promise(async (resolve, reject) => {
-    await execSync(`unzip -o ./src/verify/${username}/${file} -d ${pth}`);
-    if(await fs.existsSync(`${pth}/package-lock.json`)) docker = docker.replace('{install}', 'npm ci --only=production');
+    if(await fs.existsSync(`${pth}/package-lock.json`)) docker = docker.replace('{install}', 'npm ci --omit=dev');
     else docker = docker.replace('{install}', "npm install --omit=dev");
-    await fs.writeFileSync(`${pth}/Dockerfile`, docker);
-    await execSync(`cp .dockerignore ${pth}`, { cwd: dckr });
-    await execSync(`docker build . -t ${username}/${file}`, { cwd: pth });
-    await execSync(`rm -rf ${pth}`, { cwd: dckr });
-    await execSync(`rm -f ${path.join(__dirname, 'verify', username, file)}.zip`);
+
+    runCommand(`unzip -o ./src/verify/${username}/${file} -d ${pth}`).then(async () => {
+      fs.writeFileSync(`${pth}/Dockerfile`, docker);
+      runCommand(`cp .dockerignore ${pth}`, { cwd: dckr }).then(async () => {
+        runCommand(`docker build . -t ${username}/${file}`, { cwd: pth }).then(async () => {
+          runCommand(`rm -rf ${pth}`, { cwd: dckr }).then(async () => {
+            runCommand(`rm -f ${path.join(__dirname, 'verify', username, file)}.zip`).catch((err) => {return reject(err)});
+          }).catch((err) => {return reject(err)});
+        }).catch((err) => {return reject(err)});
+      }).catch((err) => {return reject(err)});
+    }).catch((err) => {return reject(err)});
 
     resolve();
-  })
+  });
 }
 
 async function remove(name, username) {
-  execSync(`rm -f ${path.join(__dirname, 'verify', username, name)}.zip`);
+  await runCommand(`rm -f ${path.join(__dirname, 'verify', username, name)}.zip`);
 
   return;
 }
@@ -64,13 +69,25 @@ async function remove(name, username) {
 /** @returns {statsData} */
 async function stats(id) {
   try {
-    return await JSON.parse(execSync(`docker stats --format json --no-stream ${id}`).toString());
-  } catch (e) { return null; }
+    return await JSON.parse(await runCommand(`docker stats --format json --no-stream ${id}`));
+  } catch (_) {
+    return {
+      BlockIO: "0B / 0B",
+      CPUPerc: "0.00%",
+      Container: "",
+      ID: "",
+      MemPerc: "0.00%",
+      MemUsage: "0B / 0B",
+      Name: "",
+      NetIO: "0B / 0B",
+      PIDs: "0"
+    }
+  }
 }
 
 async function startDocker({username, name, id}) {
   if(id) {
-    execSync(`docker start ${id}`)
+    await runCommand(`docker start ${id}`)
   } else {
     const fullId = execSync(`docker run -d --memory="512m" --cpus="0.25" ${username}/${name}`).toString().trim();
     const id = fullId.slice(0, 11);
@@ -81,9 +98,8 @@ async function startDocker({username, name, id}) {
 
 async function close( username, name ) {
   const user = await User.findOne({ username });
-  try {
-    execSync(`docker kill ${user.dockers[name].id}`);
-  } catch (e) {}
+
+  await runCommand(`docker kill ${user.dockers[name].id}`);
 
   user.dockers[name].running = false;
   user.markModified('dockers');
@@ -98,8 +114,19 @@ async function deleteDocker( username, name, id ) {
     await close(username, name);
   } catch (e) {}
 
-  execSync(`docker rmi -f ${username}/${name}`);
-  if(typeof id == 'string' && id !== "") execSync(`docker rm -f ${id}`);
+  await runCommand(`docker rmi -f ${username}/${name}`);
+  if(typeof id == 'string' && id !== "") await runCommand(`docker rm -f ${id}`);
+}
+
+/** @returns {Promise<string>} */
+async function runCommand(cmd, opt = {}) {
+  return new Promise((resolve, reject) => {
+    try {
+      resolve(execSync(cmd, opt).toString());
+    } catch (error) {
+      reject(error);
+    }
+  });
 }
 
 module.exports = {

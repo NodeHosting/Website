@@ -1,0 +1,34 @@
+<tbody>
+  <% dockers.forEach((docker, name) => { %>
+    <tr id="<%- name %>">
+      <td> # </td>
+      <td>
+        <span><%- name %></span>
+      </td>
+      <td>
+        <% if(docker.running) { %>
+          <span class="badge badge-success">Online</span>
+        <% } else if(docker.verifying) { %>
+          <span class="badge badge-warning">Verifying</span>
+        <% } else { %>
+          <span class="badge badge-danger">Offline</span>
+        <% } %>
+      </td>
+      <td class="project-actions text-right">
+        <% if (!docker.verifying) { %>
+          <% if (docker.id !== "") { %> <a class="btn btn-primary btn-sm" href="/logs/<%- name %>">Logs</a> <% } %>
+          <% if (docker.running) { %>
+            <a class="btn btn-warning btn-sm" href="/shutdown/<%- name %>">Stop</a>
+            <a class="btn btn-info btn-sm" href="/stats">Stats</a>  
+          <% } else { %>
+            <a class="btn btn-success btn-sm" href="/start/<%- name %>">Start</a>
+          <% } %>
+          <a class="btn btn-danger btn-sm" href="/delete/<%- name %>">Delete</a>
+        <% } else { %>
+          <a class="btn btn-danger btn-sm" href="/remove/<%- name %>">Remove</a>
+        <% } %>
+        
+      </td>
+    </tr>  
+  <% }) %>
+</tbody>

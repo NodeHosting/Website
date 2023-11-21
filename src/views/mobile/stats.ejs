@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<%- include('includes/head') %> 
+<%- include('../includes/head') %> 
 <head>
   <style>
     html,body{
@@ -21,7 +21,7 @@
   </style>
 </head>
 <body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
-  <%- include('includes/headder') %>
+  <%- include('../includes/headder') %>
   <div class="content-wrapper">
     <div class="row-cols-1" style="height: 100%;">
       <div class="col">
@@ -35,16 +35,14 @@
               <thead>
                 <tr>
                   <th> # </th>
-                  <th> Container ID </th>
                   <th> CPU Usage </th>
-                  <th> RAM Percent </th>
                   <th> Ram Usage </th>
                   <th> Status </th>
                 </tr>
               </thead>
               <tbody>
                 <% stats.forEach((obj, i) => { %>
-                  <%- include('includes/stats', {stat: obj, i }) %>
+                  <%- include('../includes/stats_mobile', {stat: obj, i }) %>
                 <% }) %>
               </tbody>
             </table>
@@ -60,16 +58,15 @@
     eventSource.addEventListener('message', (ev) => {
     const data = JSON.parse(ev.data);
     Object.keys(data).forEach(key => {
-      document.getElementById(data[key].ID).children[2].innerHTML = data[key].CPUPerc;
-      document.getElementById(data[key].ID).children[3].innerHTML = data[key].MemPerc;
-      document.getElementById(data[key].ID).children[4].innerHTML = data[key].MemUsage;
+      document.getElementById(data[key].ID).children[1].innerHTML = data[key].CPUPerc;
+      document.getElementById(data[key].ID).children[2].innerHTML = data[key].MemPerc;
 
       if(typeof data[key].online == "string") {
-        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-warning">Verifying</span>`
+        document.getElementById(data[key].ID).children[3].innerHTML = `<span class="badge badge-warning">Verifying</span>`
       } else {
         data[key].online ? 
-        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-success">Online</span>` :
-        document.getElementById(data[key].ID).children[5].innerHTML = `<span class="badge badge-danger">Offline</span>`
+        document.getElementById(data[key].ID).children[3].innerHTML = `<span class="badge badge-success">Online</span>` :
+        document.getElementById(data[key].ID).children[3].innerHTML = `<span class="badge badge-danger">Offline</span>`
       }
     });
   });
