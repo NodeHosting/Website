@@ -18,7 +18,7 @@
     "express-fileupload": "^1.4.2",
     "express-rate-limit": "^7.1.1",
     "express-session": "^1.17.3",
-    "jsdom": "^22.1.0",
+    "jsdom": "^23.0.0",
     "mongoose": "^7.6.3"
   },
   "devDependencies": {
