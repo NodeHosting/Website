@@ -16,8 +16,10 @@ const User = require("./Mongoose/User");
 const { default: rateLimit } = require("express-rate-limit");
 const fs = require("fs");
 
-if (process.env["NODE_ENV"] == "production") var production = true;
-else var production = false;
+/** @type {boolean} weather or not the application is in production mode */
+var production;
+if (process.env["NODE_ENV"] == "production") production = true;
+else production = false;
 
 const createAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -177,51 +179,51 @@ app
     const statObj = {};
 
     switch (name) {
-      case "logs": {
-        interval = setInterval(async () => {
-          const unsanitized = await docker.getLogs(user.dockers[id].id);
-          const logs = purifier.sanitize(unsanitized.join("\n")).split("\n");
+    case "logs": {
+      interval = setInterval(async () => {
+        const unsanitized = await docker.getLogs(user.dockers[id].id);
+        const logs = purifier.sanitize(unsanitized.join("\n")).split("\n");
 
-          res.write(
-            `data: ${JSON.stringify(purifier.sanitize(logs.join("\n")))}\n\n`
-          );
-        }, 2000);
+        res.write(
+          `data: ${JSON.stringify(purifier.sanitize(logs.join("\n")))}\n\n`
+        );
+      }, 2000);
 
-        break;
-      }
-      case "stats": {
-        interval = setInterval(async () => {
-          const dockers = ObjToMap(user.dockers);
-          if (i > 5) {
-            user = await User.findOne({ username });
-            i = 0;
+      break;
+    }
+    case "stats": {
+      interval = setInterval(async () => {
+        const dockers = ObjToMap(user.dockers);
+        if (i > 5) {
+          user = await User.findOne({ username });
+          i = 0;
+        }
+
+        dockers.forEach(async (data, name) => {
+          if (data.id !== "") {
+            const stat = await docker.stats(data.id);
+            if (Number(stat.PIDs) < 1 && data.running) data.running = false;
+
+            statObj[name] = { ...stat, online: data.running };
+          } else {
+            statObj[name] = {
+              CPUPerc: "0.00%",
+              MemPerc: "0.00%",
+              MemUsage: "0B / 0B",
+              online: data.verifying ? "verifying" : false,
+            };
           }
+        });
 
-          dockers.forEach(async (data, name) => {
-            if (data.id !== "") {
-              const stat = await docker.stats(data.id);
-              if (Number(stat.PIDs) < 1 && data.running) data.running = false;
+        res.write(`data: ${JSON.stringify(statObj)}\n\n`);
+        i++;
+      }, 2000);
 
-              statObj[name] = { ...stat, online: data.running };
-            } else {
-              statObj[name] = {
-                CPUPerc: "0.00%",
-                MemPerc: "0.00%",
-                MemUsage: "0B / 0B",
-                online: data.verifying ? "verifying" : false,
-              };
-            }
-          });
+      break;
+    }
 
-          res.write(`data: ${JSON.stringify(statObj)}\n\n`);
-          i++;
-        }, 2000);
-
-        break;
-      }
-
-      default:
-        break;
+    default:
+      break;
     }
 
     res.on("close", () => {

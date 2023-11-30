@@ -43,8 +43,8 @@ async function createDocker(file, username, version, envArr = []) {
       recursive: true,
     });
 
-  return new Promise(async (resolve, reject) => {
-    if (await fs.existsSync(`${pth}/package-lock.json`))
+  return new Promise((resolve, reject) => {
+    if (fs.existsSync(`${pth}/package-lock.json`))
       docker = docker.replace("{install}", "npm ci --omit=dev");
     else docker = docker.replace("{install}", "npm install --omit=dev");
 
@@ -146,9 +146,7 @@ async function close(username, name) {
 }
 
 async function deleteDocker(username, name, id) {
-  try {
-    await close(username, name);
-  } catch (e) {}
+  await close().catch(() => {});
 
   await runCommand(`docker rmi -f ${username}/${name}`);
   if (typeof id == "string" && id !== "")
