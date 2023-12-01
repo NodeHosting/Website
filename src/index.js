@@ -51,7 +51,11 @@ app
 
     res.redirect("/admin");
   })
-  .listen(80, () => console.log("Website online on port 80"));
+  .listen(80, () =>
+    console.log(
+      `Website online on port 80 ${production ? "in production mode" : ""}`
+    )
+  );
 
 mongoose
   .connect(config.mongoose_url)
