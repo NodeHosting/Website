@@ -22,7 +22,11 @@
     }
   </style>
 </head>
-<body class="hold-transition dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<% if(user['dark-mode']) { %>
+  <body class="dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<% } else { %>
+  <body class="sidebar-collapse" style="overflow-y: hidden;">
+<% } %>
   <%- include('../includes/headder') %>
   <div class="content-wrapper">
     <div class="row-cols-1" style="height: 100%;">

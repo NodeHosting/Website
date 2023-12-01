@@ -9,6 +9,7 @@ module.exports = mongoose.model(
     admin: { type: Boolean, default: false },
     maxContainers: { type: mongoose.Types.Decimal128, default: 1 },
     apiKey: { type: String, default: "" },
+    "dark-mode": { type: Boolean, default: true },
 
     messages: {
       type: Array,

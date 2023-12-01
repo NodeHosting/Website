@@ -3,4 +3,44 @@
 body {
   font-family: 'Borel', cursive;
   font-family: 'Noto Serif Old Uyghur', serif;
+
+  overflow-y: hidden !important;
+}
+
+body.dark-mode .wrapper .content-wrapper {
+  background-color: var(--dark-shades);
+}
+
+body .wrapper .content-wrapper {
+  background-color: var(--light-shades);
+}
+
+.dark-mode .wrapper .main-header {
+  background-color: var(--dark-accent);
+}
+
+.wrapper .main-header {
+  background-color: var(--light-accent);
+}
+
+.btn-darker {
+  color: white;
+  background-color: var(--darker-accent);
+}
+
+.dark-mode {
+  background-color: var(--dark-shades) !important;
+}
+
+div.card {
+  background-color: var(--main-brand) !important;
+}
+
+:root {
+  --light-shades: #f6f7f5;
+  --light-accent: #7d8386;
+  --main-brand: #999a90;
+  --dark-accent: #7c7c7b;
+  --dark-shades: #29212c;
+  --darker-accent: #0d0c0e;
 }

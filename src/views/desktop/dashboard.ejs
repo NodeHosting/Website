@@ -7,7 +7,11 @@
     href="/css/dashboard.css"
   />
 </head>
-<body class="hold-transition dark-mode sidebar-collapse" style="overflow: hidden;">
+<% if(user['dark-mode']) { %>
+  <body class="dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<% } else { %>
+  <body class="sidebar-collapse" style="overflow-y: hidden;">
+<% } %>
   <div class="wrapper">
     <%- include('../includes/headder') %>
     <div class="content-wrapper">
@@ -42,12 +46,12 @@
       
       <div class="row">
         <div class="col">
-          <div class="card card-outline card-purple docker-box">
+          <div class="card card-outline docker-box">
             <div class="card-body" style="display: flex; justify-content: center;">
               <% if(Object.entries(user.dockers).length < user.maxContainers) { %>
-                <a href="/addDocker"><button class="btn-lg btn-primary"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
+                <a href="/addDocker"><button class="btn-lg btn-darker"><i class="fa-solid fa-plus"></i> Add Docker container</button></a>
               <% } else { %>
-                <button class="btn-lg btn-primary disabled" style="cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
+                <button class="btn-lg btn-darker disabled" style="cursor: not-allowed;"><i class="fa-solid fa-plus"></i> Add Docker container</button>
               <% } %>
             </div>
           </div>

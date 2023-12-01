@@ -14,7 +14,11 @@
     }
   </style>
 </head>
-<body class="dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<% if(user['dark-mode']) { %>
+  <body class="dark-mode sidebar-collapse" style="overflow-y: hidden;">
+<% } else { %>
+  <body class="sidebar-collapse" style="overflow-y: hidden;">
+<% } %>
   <div class="wrapper">
     <%- include('includes/headder') %>
     <div class="content-wrapper">
@@ -103,6 +107,18 @@
               </div>
             </div>
           </div>
+          <!-- <div class="col-md-3">
+            <div class="card card-outline card-red">
+              <div class="card-header">
+                <h3 class="card-title">Reset Routes</h3>
+              </div>
+              <div class="card-body">
+                <form method="post" action="/admin/update" role="form" style="display: flex; justify-content: center;">
+                  <button class="btn btn-success">Reset</button>
+                </form>
+              </div>
+            </div>
+          </div> -->
         </div>
       </div>
     </div>
