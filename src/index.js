@@ -1,5 +1,5 @@
 const express = require("express");
-const session = require("express-session");
+const session = require("cookie-session");
 const fileUpload = require("express-fileupload");
 const app = express();
 
@@ -10,8 +10,11 @@ const mongoose = require("mongoose");
 
 /** @type {boolean} weather or not the application is in production mode */
 var production;
-if (process.env["NODE_ENV"] == "production") production = true;
-else production = false;
+if (process.env["NODE_ENV"] == "production") {
+  production = true;
+} else {
+  production = false;
+}
 
 var routes = require("./routers");
 
@@ -27,10 +30,10 @@ app
   )
   .use(
     session({
-      secret: config.session_secret,
-      resave: false,
-      saveUninitialized: false,
-      cookie: { maxAge: 1000 * 60 * 60 * 12, secure: production },
+      name: "session",
+      keys: [config.session_secret],
+      secure: production,
+      maxAge: 1000 * 60 * 60 * 12,
     })
   )
   .use(require("cookie-parser")())
