@@ -27,11 +27,11 @@
               <div class="card-body">
                   <div class="form-group">
                     <label for="dockerName">Docker Image Name</label>
-                    <input name="name" type="text" class="form-control" id="dockerName" autocomplete="off" placeholder="Enter Image Name">
+                    <input name="name" type="text" class="form-control" id="dockerName" autocomplete="off" placeholder="Enter Image Name" required>
                   </div>
                   <div class="form-group">
                     <label for="node">Node Version</label>
-                    <select class="form-control" name="node_version" id="node">
+                    <select class="form-control" name="node_version" id="node" required>
                       <option value="latest" selected>latest</option>
                       <option value="20.9.0">20.9.0</option>
                       <option value="18.18.2">18.18.2</option>
@@ -41,7 +41,7 @@
                     <label for="fileInput">Code File</label>
                     <div class="input-group">
                       <div class="custom-file">
-                        <input type="file" class="custom-file-input" accept=".zip,.rar,.7zip" id="fileInput" name="code">
+                        <input type="file" class="custom-file-input" accept=".zip,.rar,.7zip" id="fileInput" name="code" required>
                         <label class="custom-file-label" for="fileInput">Choose File</label>
                       </div>
                     </div>
